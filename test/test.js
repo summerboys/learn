@@ -386,7 +386,7 @@ function throttle(fn, delay = 300){
 
 function reverseList(head){
     let prevNode = null;
-    while(head.next !== null){
+    while(head){
         let tempNext = head.next;
         head.next = prevNode;
         prevNode = head;
@@ -737,4 +737,46 @@ function maxAdd(a = '', b = ''){
         sum = '' + f + sum
     }
     return sum
+}
+
+// 3 无重复子串长度
+
+function lengthSubString(s = ''){
+    let arr = [],
+        max = 0;
+    for(let i of s){
+        if(arr.includes(i)){
+            let index = arr.includes(i);
+            arr.splice(0, index + 1)
+        }
+        arr.push;
+        max = arr.length > max ? arr.length : max;
+    }
+    return max
+}
+
+// 4 two sum 
+
+function twoSum(nums = [],target){
+    let res = {};
+    for(let i =0;i< nums.length; i++){
+        if(res[nums[i]] !== undefined){
+            return [nums[i], res[nums[i]]]
+        }else {
+            res[target - nums[i]] = nums[i]
+        }
+    }
+    return []
+}
+
+// 5 买卖股票最佳时机
+
+function maxPoint(arr = []){
+    let p = 0,
+        min = arr[0];
+    for(let i = 0; i < arr.length; i++){
+        min = Math.min(min, arr[i])
+        p = Math.max(p, arr[i] - min)
+    }
+    return p
 }
