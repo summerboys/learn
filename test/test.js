@@ -11,9 +11,32 @@ function compose(...fn){
     )
 }
 
+function compose(...fn){
+    if(!fn.length) return (v) => v;
+    if(fn.length === 1) return fn[0];
+    return fn.reduce(
+        (pre, cur) => 
+            (...args) => pre(cur(...args))
+    )
+}
+
 // 2 setTimeout 模拟实现 setInterval
 
 function mySetInterval(fn, time) {
+    let timer = null;
+    function interval(){
+        fn()
+        timer = setTimeout(interval, time)
+    }
+    interval();
+    return {
+        cancel: () => {
+            clearTimeout(timer)
+        }
+    }
+}
+
+function mySetInterval(fn, time){
     let timer = null;
     function interval(){
         fn()
@@ -67,6 +90,38 @@ class EventEmitter {
     }
 }
 
+class EventEmitter2 {
+    constructor(){
+        this.events = []
+    }
+
+    on(type, callback){
+        if(this.events[type]){
+            this.events[type] = [callback]
+        }else{
+            this.events[type].push(callback)
+        }
+    }
+
+    off(type, callback){
+        if(!this.events[type]) return
+        this.events[type] = this.events[type].filter(item => item !== callback)
+    }
+
+    once(type, callback){
+        function fn(){
+            callback()
+            this.off(type, callback)
+        }
+        this.on(type, fn)
+    }
+
+    emit(type, ...args){
+        this.events[type] && this.events[type].forEach(item => item.apply(this, args))
+    }
+
+}
+
 // 4 数组去重
 
 function uniqueArr(arr){
@@ -81,6 +136,13 @@ function flatter (arr) {
         (pre, cur) => 
             Array.isArray(cur) ? [...pre, ...flatter(cur)] : [...pre, cur]
     )
+}
+
+function flatten(arr = []){
+    if(!arr.length) return arr;
+    arr.reduce((pre, cur) => {
+        return Array.isArray(cur) ? [...pre, ...flatten(cur)] : [...pre, cur]
+    }, [])
 }
 
 function flatter2(arr){
@@ -367,8 +429,25 @@ function debounce(fn, delay = 300){
         }
         timer = setTimeout(() => {
             fn.apply(this, args)
+            timer = null;
         }, delay)
     }
+}
+
+const useDebounce = (fn, delay) => {
+    const { current } = useRef(null);
+    function debounce(){
+        let timer = current;
+        return () => {
+            if(current){
+                clearTimeout(timer)
+            }
+            timer = setTimeout(() => {
+                fn(args)
+            },delay)
+        }
+    }
+    return debounce()
 }
 
 function throttle(fn, delay = 300){
@@ -729,7 +808,7 @@ function maxAdd(a = '', b = ''){
     let f = 0;
     let sum = '';
     for(let i =maxLength -1; i>=0;i--){
-        t = parseInt(a[i] + parseInt(b[i])) + f;
+        t = parseInt(a[i]) + parseInt(b[i]) + f;
         f = Math.floor(t/10);
         sum = t%10 + sum
     }
@@ -769,6 +848,17 @@ function twoSum(nums = [],target){
     return []
 }
 
+function twoSum2(nums = [], target) {
+    let map = new Map();
+    for(let i = 0; i < nums.length; i++){
+        let x = target - nums[i]
+        if(map.has(x)){
+            return [map.get(x), i]
+        }
+        map.set(nums[i], i)
+    }
+}
+
 // 5 买卖股票最佳时机
 
 function maxPoint(arr = []){
@@ -779,4 +869,14 @@ function maxPoint(arr = []){
         p = Math.max(p, arr[i] - min)
     }
     return p
+}
+
+function maxPoint1(arr = []){
+    let p = 0,
+        min = arr[0];
+    for(let i = 0; i < arr.length; i++){
+        min = Math.min(min, arr[i]);
+        p = Math.max(arr[i] - min, p)
+    }
+    return p;
 }
