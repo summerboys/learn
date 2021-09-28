@@ -90,37 +90,9 @@ class EventEmitter {
     }
 }
 
-class EventEmitter2 {
-    constructor(){
-        this.events = []
-    }
+// 观察者模式 
 
-    on(type, callback){
-        if(this.events[type]){
-            this.events[type] = [callback]
-        }else{
-            this.events[type].push(callback)
-        }
-    }
 
-    off(type, callback){
-        if(!this.events[type]) return
-        this.events[type] = this.events[type].filter(item => item !== callback)
-    }
-
-    once(type, callback){
-        function fn(){
-            callback()
-            this.off(type, callback)
-        }
-        this.on(type, fn)
-    }
-
-    emit(type, ...args){
-        this.events[type] && this.events[type].forEach(item => item.apply(this, args))
-    }
-
-}
 
 // 4 数组去重
 
@@ -818,6 +790,24 @@ function maxAdd(a = '', b = ''){
     return sum
 }
 
+function addMax(a = '', b = ''){
+    let maxLen = Math.max(a.length, b.length);
+    a = a.padStart(maxLen, 0);
+    b = b.padStart(maxLen, 0);
+    let t = 0,
+        f = 0,
+        sum = '';
+    for(let i = maxLen - 1; i >=0; i--){
+        t = parseInt(a[i]) + parseInt(b[i]) + t;
+        f = Math.floor(t/10);
+        sum = t%10 + sum;
+    }
+    if(f !== 0){
+        sum = '' + f + sum
+    }
+    return sum
+}
+
 // 3 无重复子串长度
 
 function lengthSubString(s = ''){
@@ -869,14 +859,4 @@ function maxPoint(arr = []){
         p = Math.max(p, arr[i] - min)
     }
     return p
-}
-
-function maxPoint1(arr = []){
-    let p = 0,
-        min = arr[0];
-    for(let i = 0; i < arr.length; i++){
-        min = Math.min(min, arr[i]);
-        p = Math.max(arr[i] - min, p)
-    }
-    return p;
 }
