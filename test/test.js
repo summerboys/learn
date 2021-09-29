@@ -12,12 +12,29 @@ function compose(...fn){
 }
 
 function compose(...fn){
-    if(!fn.length) return (v) => v;
-    if(fn.length === 1) return fn[0];
+    if(fn.length === 0) return (v) => v
+    if(fn.length === 1) return fn[0]
     return fn.reduce(
         (pre, cur) => 
-            (...args) => pre(cur(...args))
+            (...args) => pre(cur(...args)) 
     )
+}
+
+// 统计数量
+
+function countNumber(arr = []){
+    let map = {},
+        max = 1;
+    arr.reduce((pre, cur) => {
+        console.log(pre)
+        if(pre[cur]){
+            pre[cur]++
+            max = Math.max(max, pre[cur])
+        }else {
+            pre[cur] = 1
+        }
+    }, map)
+    return max
 }
 
 // 2 setTimeout 模拟实现 setInterval
@@ -790,17 +807,17 @@ function maxAdd(a = '', b = ''){
     return sum
 }
 
-function addMax(a = '', b = ''){
+function maxAdd(a = '', b = ''){
     let maxLen = Math.max(a.length, b.length);
-    a = a.padStart(maxLen, 0);
-    b = b.padStart(maxLen, 0);
-    let t = 0,
-        f = 0,
-        sum = '';
-    for(let i = maxLen - 1; i >=0; i--){
-        t = parseInt(a[i]) + parseInt(b[i]) + t;
+    a = a.padStart(maxLen, '0')
+    b = b.padStart(maxLen, '0')
+    let sum = '',
+        t = 0,
+        f = 0;
+    for(let i = maxLen - 1; i >= 0; i--){
+        t = parseInt(a[i]) + parseInt(b[i]) + f;
         f = Math.floor(t/10);
-        sum = t%10 + sum;
+        sum = t%10 + sum
     }
     if(f !== 0){
         sum = '' + f + sum
@@ -818,10 +835,23 @@ function lengthSubString(s = ''){
             let index = arr.includes(i);
             arr.splice(0, index + 1)
         }
-        arr.push;
+        arr.push(s[i]);
         max = arr.length > max ? arr.length : max;
     }
     return max
+}
+
+function lengthSubString2(s = ''){
+    let arr = [],
+        max = 0;
+    for(let i of s){
+        if(arr.includes(i)){
+            let index = arr.findIndex(item => item === i);
+            arr.splice(0, index + 1)
+        }
+        arr.push(s[i])
+        max = arr.length > max ? arr.length : max;
+    }
 }
 
 // 4 two sum 
@@ -838,7 +868,7 @@ function twoSum(nums = [],target){
     return []
 }
 
-function twoSum2(nums = [], target) {
+function twoSum3(nums = [], target){
     let map = new Map();
     for(let i = 0; i < nums.length; i++){
         let x = target - nums[i]
@@ -860,3 +890,4 @@ function maxPoint(arr = []){
     }
     return p
 }
+
