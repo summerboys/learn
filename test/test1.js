@@ -12,7 +12,7 @@ function countNumber(arr = []){
         }
         return pre
     }, map)
-    return max
+    return {max, map}
 }
 
 console.log(countNumber([1,2,3,4,5,6,6]))

@@ -841,18 +841,6 @@ function lengthSubString(s = ''){
     return max
 }
 
-function lengthSubString2(s = ''){
-    let arr = [],
-        max = 0;
-    for(let i of s){
-        if(arr.includes(i)){
-            let index = arr.findIndex(item => item === i);
-            arr.splice(0, index + 1)
-        }
-        arr.push(s[i])
-        max = arr.length > max ? arr.length : max;
-    }
-}
 
 // 4 two sum 
 
