@@ -11,15 +11,6 @@ function compose(...fn){
     )
 }
 
-function compose(...fn){
-    if(fn.length === 0) return (v) => v
-    if(fn.length === 1) return fn[0]
-    return fn.reduce(
-        (pre, cur) => 
-            (...args) => pre(cur(...args)) 
-    )
-}
-
 // 统计数量
 
 function countNumber(arr = []){
@@ -40,20 +31,6 @@ function countNumber(arr = []){
 // 2 setTimeout 模拟实现 setInterval
 
 function mySetInterval(fn, time) {
-    let timer = null;
-    function interval(){
-        fn()
-        timer = setTimeout(interval, time)
-    }
-    interval();
-    return {
-        cancel: () => {
-            clearTimeout(timer)
-        }
-    }
-}
-
-function mySetInterval(fn, time){
     let timer = null;
     function interval(){
         fn()
@@ -120,7 +97,7 @@ function uniqueArr(arr){
 // 5 数组扁平化
 
 function flatter (arr) {
-    if(!arr.length) return 
+    if(!arr.length) return arr
     return arr.reduce(
         (pre, cur) => 
             Array.isArray(cur) ? [...pre, ...flatter(cur)] : [...pre, cur]
@@ -135,7 +112,7 @@ function flatten(arr = []){
 }
 
 function flatter2(arr){
-    if(!arr.length) return;
+    if(!arr.length) return arr;
     while(arr.some(item => Array.isArray(item))){
         arr = [].concat(...arr)
     }
@@ -249,7 +226,9 @@ Function.prototype.myCall = (content, ...args) => {
     }
     let fn = Symbol();
     content[fn] = this;
-    return content[fn](...args)
+    const res =  content[fn](...args)
+    delete content[fn]
+    return res
 
 }
 
@@ -260,7 +239,15 @@ Function.prototype.myApply = (content, args) => {
 
     let fn = Symbol();
     content[fn] = this;
-    return content[fn](...args)
+    const res = content[fn](args)
+    delete content[fn]
+    return res
+}
+
+Function.prototype.myBind = (content, args) => {
+    return (...args2) => {
+        return fn.apply(content, args.concat(args2))
+    }
 }
 
 // 10 深拷贝
@@ -287,6 +274,27 @@ function deepClone(obj, hash = new WeakMap){
     return target;
 }
 
+function isObject2(val){
+    return typeof val === 'object' && val !== null;
+}
+
+function deepClone2(obj, hash = new WeakMap){
+    if(!isObject(obj)) return obj;
+    if(hash.has(obj)){
+        return hash.get(obj)
+    }
+    let target = Array.isArray(obj) ? [] :{};
+    hash.set(obj, target)
+    Reflect.ownKeys(obj).forEach((item) => {
+        if(isObject(item)){
+            target[item] = deepClone2(obj[item])
+        }else {
+            target[item] = deepClone2[item]
+        }
+    })
+    return target
+}
+
 // 11、instanceof 
 
 function myInstanceof(left, right){
@@ -298,6 +306,18 @@ function myInstanceof(left, right){
             return true
         }
         left = right.__proto__
+    }
+}
+
+function myInstanceof2(left, right){
+    while(true){
+        if(left === null){
+            return false
+        }
+        if(left.__proto__ === right.prototype){
+            return true
+        }
+        left = left.__proto__
     }
 }
 
@@ -315,20 +335,6 @@ function curry(fn, ...args){
         }
     }
     return res
-}
-
-// 13 排序
-
-function bubbleSort(arr = []){
-    const len = arr.length;
-    for(let i = 0; i < len; i++){
-        for(let j = 0; j < len - 1; j ++){
-            if(arr[j] > arr[j + 1]){
-                [arr[j], arr[j + 1]] = [arr[j + 1 ], arr[j]]
-            }
-        }
-    }
-    return arr;
 }
 
 
