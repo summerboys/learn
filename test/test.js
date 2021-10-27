@@ -4,11 +4,7 @@
 function compose(...fn){
     if(!fn.length) return (v) => v;
     if(fn.length === 1) return fn[0];
-    return fn.reduce(
-        (pre, cur) => 
-            (...args) => 
-                pre(cur(...args))
-    )
+    return fn.reduce((pre, cur) => (...args) => pre(cur(...args)))
 }
 
 // 统计数量
@@ -17,13 +13,13 @@ function countNumber(arr = []){
     let map = {},
         max = 1;
     arr.reduce((pre, cur) => {
-        console.log(pre)
         if(pre[cur]){
             pre[cur]++
             max = Math.max(max, pre[cur])
         }else {
             pre[cur] = 1
         }
+        return map
     }, map)
     return max
 }
@@ -35,6 +31,20 @@ function mySetInterval(fn, time) {
     function interval(){
         fn()
         timer = setTimeout(interval, time)
+    }
+    interval();
+    return {
+        cancel: () => {
+            clearTimeout(timer)
+        }
+    }
+}
+
+function mySetInterval2(fn ,delay){
+    let timer = null;
+    function interval(){
+        fn();
+        timer = setTimeout(interval, delay)
     }
     interval();
     return {
@@ -104,20 +114,11 @@ function flatter (arr) {
     )
 }
 
-function flatten(arr = []){
+function flattlen2 (arr = []){
     if(!arr.length) return arr;
-    arr.reduce((pre, cur) => {
-        return Array.isArray(cur) ? [...pre, ...flatten(cur)] : [...pre, cur]
-    }, [])
+    return arr.reduce((pre, cur) => arr.isArray(cur) ? [...pre, ...flattlen2(cur)] : [...pre, cur])
 }
 
-function flatter2(arr){
-    if(!arr.length) return arr;
-    while(arr.some(item => Array.isArray(item))){
-        arr = [].concat(...arr)
-    }
-    return arr
-}
 
 // 6、寄生组合继承
 
@@ -128,10 +129,6 @@ function Parent(name){
     }
 }
 
-Parent.prototype.play = () => {
-    console.log(222)
-}
-
 function Children(name){
     Parent.call(this)
     this.name = name
@@ -140,6 +137,18 @@ function Children(name){
 Children.prototype = Object.create(Parent.prototype)
 
 Children.prototype.constructor = Children;
+
+function Parent(name){
+    this.name = name
+}
+
+function Child(name){
+    Parent.call(this, name)
+}
+
+Child.prototype = Object.create(Parent.prototype);
+
+Child.prototypr.constructor = Child
 
 // 7、 并发限制 promise 调度器
 
@@ -160,6 +169,7 @@ class Scheduler{
             })
         }
         this.queue.push(promiseCreator)
+        return promiseCreator()
     }
     taskStart(){
         for(let i = 0; i < this.maxCount; i++){
@@ -185,20 +195,22 @@ const addTest = (time, order) => {
 }
 
 function sendRequest(urls = [], max = 2, callback){
-    let finished = 0;
+    let finished = 0,
+        res = [];
     const total = urls.length;
     function handler(){
         if(urls.length){
             const url = urls.shift();
-            fetch(url).then(() => {
+            fetch(url).then((data) => {
                 finished++
+                res.push(data)
                 handler()
             }).catch(e =>{
                 throw Error(e)
             })
         }
         if(finished >= total ){
-            callback()
+            callback(res)
         }
     }
     for(let i = 0; i < max; i++){
@@ -216,6 +228,12 @@ function myNew(fn, ...args){
         return res
     }
     return obj
+}
+
+function myNew(fn, ...args){
+    let obj = Object.create(fn.prototype);
+    let res = fn.call(obj, ...args);
+    return typeof res === 'object' && res !== null ? res : obj
 }
 
 // 9 call apply bind
@@ -274,27 +292,6 @@ function deepClone(obj, hash = new WeakMap){
     return target;
 }
 
-function isObject2(val){
-    return typeof val === 'object' && val !== null;
-}
-
-function deepClone2(obj, hash = new WeakMap){
-    if(!isObject(obj)) return obj;
-    if(hash.has(obj)){
-        return hash.get(obj)
-    }
-    let target = Array.isArray(obj) ? [] :{};
-    hash.set(obj, target)
-    Reflect.ownKeys(obj).forEach((item) => {
-        if(isObject(item)){
-            target[item] = deepClone2(obj[item])
-        }else {
-            target[item] = deepClone2[item]
-        }
-    })
-    return target
-}
-
 // 11、instanceof 
 
 function myInstanceof(left, right){
@@ -306,18 +303,6 @@ function myInstanceof(left, right){
             return true
         }
         left = right.__proto__
-    }
-}
-
-function myInstanceof2(left, right){
-    while(true){
-        if(left === null){
-            return false
-        }
-        if(left.__proto__ === right.prototype){
-            return true
-        }
-        left = left.__proto__
     }
 }
 
@@ -337,6 +322,20 @@ function curry(fn, ...args){
     return res
 }
 
+function curry2(fn, ...args){
+    const length = fn.length;
+    let allArgs = [...args]
+    const res = (...newArgs) => {
+        allArgs = [...allArgs, ...newArgs]
+        if(allArgs.length === length){
+            return fn(...allArgs)
+        }else {
+            return res
+        }
+    }
+    return res
+}
+
 
 function quickSort(arr = []){
     if(arr.length < 2){
@@ -345,8 +344,9 @@ function quickSort(arr = []){
     const cur = arr[arr.length - 1]
     const left = arr.filter((v, i) => v <= cur && i !== arr.length - 1);
     const right = arr.filter((v) => v > cur);
-    return [...quickSort(left), cur, ...quickSort(right)]
+    return [...quickSort(left), cur, ...quickSort(right)];
 }
+
 
 // 18 二分查找
 
@@ -378,6 +378,7 @@ class LazyMan{
             console.log(`Hi! this is ${name}`)
             this.next()
         }
+        this.tasks.push(task)
     }
     next(){
         const task = this.tasks.shift();
@@ -446,12 +447,13 @@ const useDebounce = (fn, delay) => {
 }
 
 function throttle(fn, delay = 300){
-    let prev = Date.now();
+    let flag = true;
     return (...args) => {
-        if(Date.now() - prev > delay){
+        if(!flag) return 
+        flag = false;
+        setTimeout(() => {
             fn.apply(this, args)
-            prev = Date.now();
-        }
+        }, delay)
     }
 }
 
@@ -517,6 +519,7 @@ class LRUCache{
             this.secretKey.set(key, value)
         }else {
             this.secretKey.set(key, value);
+            // iterator 接口 genartor 迭代器 next() 第一个 值value 
             this.secretKey.delete(this.secretKey.keys().next().value)
         }
     }
@@ -620,6 +623,7 @@ function add(...args){
     let allArgs = [...args];
     function fn(...newArgs){
         allArgs = [...allArgs, ...newArgs]
+        return fn
     }
     fn.toString = function(){
         if(!allArgs.length){
@@ -813,23 +817,6 @@ function maxAdd(a = '', b = ''){
     return sum
 }
 
-function maxAdd(a = '', b = ''){
-    let maxLen = Math.max(a.length, b.length);
-    a = a.padStart(maxLen, '0')
-    b = b.padStart(maxLen, '0')
-    let sum = '',
-        t = 0,
-        f = 0;
-    for(let i = maxLen - 1; i >= 0; i--){
-        t = parseInt(a[i]) + parseInt(b[i]) + f;
-        f = Math.floor(t/10);
-        sum = t%10 + sum
-    }
-    if(f !== 0){
-        sum = '' + f + sum
-    }
-    return sum
-}
 
 // 3 无重复子串长度
 
@@ -862,16 +849,17 @@ function twoSum(nums = [],target){
     return []
 }
 
-function twoSum3(nums = [], target){
+function twoSum2(nums = [], target){
     let map = new Map();
     for(let i = 0; i < nums.length; i++){
-        let x = target - nums[i]
+        let x = target - nums[i];
         if(map.has(x)){
             return [map.get(x), i]
         }
         map.set(nums[i], i)
     }
 }
+
 
 // 5 买卖股票最佳时机
 
@@ -885,3 +873,89 @@ function maxPoint(arr = []){
     return p
 }
 
+function maxPoint(arr = []){
+    let p = 0,
+        min = arr[0];
+    for(let i = 0; i < arr.length; i++){
+        min = Math.min(min, arr[i]);
+        p = Math.max(p, arr[i] - min)
+    }
+    return p
+}
+
+// 6 括号 有效性
+const isValid = (s = '') => {
+    if(s.length %2 === 1){
+        return false
+    }
+    const obj = {
+        '{': '}',
+        '[': ']',
+        '(': ')'
+    }
+    let stack = []
+    for(let i = 0; i< s.length; i++){
+        if(s[i] === '{' || s[i] === '[' || s[i] === '('){
+            stack.push(i)
+        }else {
+            const cur = stack.pop();
+            if(s[i] !== obj[cur]){
+                return false;
+            }
+        }
+    }
+    if(stack.length){
+        return false
+    }
+    return true
+} 
+
+// 7、 最长公共前缀
+
+const longCommonPrefix = (strs = []) => {
+    const str = strs[0];
+    let index = 0;
+    while(index < str.length){
+        const strCur = str.slice(0, index + 1);
+        for(let i = 0; i < strs.length; i++){
+            if(!strs[i] || !strs[i].startsWith(strCur)){
+                return str.slice(0, index)
+            }
+        }
+        index++
+    }
+    return str
+}
+
+const longCommon = (strs = []) => {
+    const str = strs[0];
+    let index = 0;
+    while(index < str.length){
+        const strCur = str.slice(0, index + 1);
+        for(let i = 0; i < strs.length; i++){
+            if(!strs[i] || !strs[i].startsWith(strCur)){
+                return str.slice(0, index)
+            }
+        }
+        index++
+    }
+    return str
+}
+
+// 8、 洗牌 算法
+
+function shuffle(arr = []){
+    for(let i = arr.length; i > 0; i--){
+        const p = Math.floor(Math.random() * i);
+        [arr[p], arr[i - 1]] = [arr[i - 1], arr[p]]
+    }
+    return arr
+}
+
+function shuffle(arr = []){
+    for(let i = arr.length; i > 0; i--){
+        const p = Math.floor(Math.random() * i);
+        [arr[p], arr[i - 1]] = [arr[i - 1], arr[p]]
+    }
+    return arr
+}
